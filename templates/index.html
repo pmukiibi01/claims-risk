@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claims-Based Risk Adjustment System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+        .feature-card {
+            transition: transform 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .status-badge {
+            font-size: 0.8rem;
+        }
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .results-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                Risk Adjustment System
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-4">Claims-Based Risk Adjustment & Cost Drivers</h1>
+                    <p class="lead mb-4">
+                        Estimate member risk and explain spend variation using HCC adaptation, 
+                        GLM/GAM, and two-part models. Reduce PMPM forecast error by ~18%.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-light btn-lg" onclick="generateSampleData()">
+                            <i class="fas fa-download me-2"></i>Generate Sample Data
+                        </button>
+                        <button class="btn btn-outline-light btn-lg" onclick="downloadSample()">
+                            <i class="fas fa-file-csv me-2"></i>Download Template
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="text-center">
+                        <i class="fas fa-brain fa-5x mb-3"></i>
+                        <h4>AI-Powered Risk Analysis</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <!-- Upload Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-upload me-2"></i>Upload Claims Data</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Drag & Drop your claims data here</h5>
+                            <p class="text-muted">Supports CSV and Excel files</p>
+                            <input type="file" id="fileInput" class="d-none" accept=".csv,.xlsx">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                Choose File
+                            </button>
+                        </div>
+                        <div id="uploadStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <button class="btn btn-success w-100" onclick="trainModel()" id="trainBtn" disabled>
+                    <i class="fas fa-brain me-2"></i>Train Risk Model
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-info w-100" onclick="analyzeCostDrivers()" id="analyzeBtn" disabled>
+                    <i class="fas fa-chart-pie me-2"></i>Analyze Cost Drivers
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-warning w-100" onclick="getModelPerformance()" id="performanceBtn" disabled>
+                    <i class="fas fa-tachometer-alt me-2"></i>Model Performance
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h4 class="mb-4"><i class="fas fa-chart-bar me-2"></i>Analysis Results</h4>
+            <div id="resultsContent"></div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="text-center mb-5">Key Features</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-heartbeat fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">HCC Risk Adjustment</h5>
+                        <p class="card-text">
+                            Hierarchical Condition Category mapping for accurate risk scoring 
+                            and member risk stratification.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">GLM/GAM Models</h5>
+                        <p class="card-text">
+                            Advanced statistical models including Generalized Linear Models 
+                            and Generalized Additive Models for risk prediction.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-search-dollar fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Cost Driver Analysis</h5>
+                        <p class="card-text">
+                            Shapley decomposition and feature importance analysis to identify 
+                            and explain cost variation drivers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Requirements -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Data Requirements</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Required Fields:</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>member_id (string)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>age (integer)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>gender (string)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>total_cost (float)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>total_claims (integer)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Optional Fields:</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-info text-info me-2"></i>diabetes (0/1)</li>
+                                    <li><i class="fas fa-info text-info me-2"></i>hypertension (0/1)</li>
+                                    <li><i class="fas fa-info text-info me-2"></i>heart_disease (0/1)</li>
+                                    <li><i class="fas fa-info text-info me-2"></i>copd (0/1)</li>
+                                    <li><i class="fas fa-info text-info me-2"></i>cancer (0/1)</li>
+                                    <li><i class="fas fa-info text-info me-2"></i>kidney_disease (0/1)</li>
+                                    <li><i class="fas fa-info text-info me-2"></i>mental_health (0/1)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Claims-Based Risk Adjustment System</h5>
+                    <p class="mb-0">Advanced analytics for healthcare cost management and risk prediction.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">&copy; 2025 Risk Adjustment System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let uploadedData = false;
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadStatus.innerHTML = '<div class="alert alert-info">Uploading file...</div>';
+
+            fetch('/upload-claims', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    uploadStatus.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    uploadedData = true;
+                    document.getElementById('trainBtn').disabled = false;
+                    document.getElementById('analyzeBtn').disabled = false;
+                } else {
+                    uploadStatus.innerHTML = `<div class="alert alert-danger">Upload failed: ${data.detail}</div>`;
+                }
+            })
+            .catch(error => {
+                uploadStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+        }
+
+        function generateSampleData() {
+            fetch('/generate-sample-data', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    uploadedData = true;
+                    document.getElementById('trainBtn').disabled = false;
+                    document.getElementById('analyzeBtn').disabled = false;
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+        }
+
+        function downloadSample() {
+            window.open('/download-sample', '_blank');
+        }
+
+        function trainModel() {
+            if (!uploadedData) {
+                alert('Please upload data first');
+                return;
+            }
+
+            fetch('/train-risk-model', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showResults('Model Training Results', data);
+                    document.getElementById('performanceBtn').disabled = false;
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+        }
+
+        function analyzeCostDrivers() {
+            if (!uploadedData) {
+                alert('Please upload data first');
+                return;
+            }
+
+            fetch('/analyze-cost-drivers', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showResults('Cost Driver Analysis', data);
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+        }
+
+        function getModelPerformance() {
+            fetch('/model-performance')
+            .then(response => response.json())
+            .then(data => {
+                if (data.best_model) {
+                    showResults('Model Performance', data);
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+        }
+
+        function showResults(title, data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            let html = `<h5>${title}</h5>`;
+            
+            if (data.analysis_results) {
+                html += '<div class="row">';
+                html += '<div class="col-md-6"><h6>Cost Drivers</h6><ul>';
+                if (data.analysis_results.cost_drivers && data.analysis_results.cost_drivers.top_drivers) {
+                    data.analysis_results.cost_drivers.top_drivers.forEach(driver => {
+                        html += `<li>${driver[0]}: ${(driver[1] * 100).toFixed(2)}%</li>`;
+                    });
+                }
+                html += '</ul></div>';
+                html += '<div class="col-md-6"><h6>Insights</h6><ul>';
+                if (data.analysis_results.insights) {
+                    data.analysis_results.insights.forEach(insight => {
+                        html += `<li>${insight}</li>`;
+                    });
+                }
+                html += '</ul></div>';
+                html += '</div>';
+            }
+            
+            if (data.model_performance) {
+                html += '<div class="row mt-3">';
+                html += '<div class="col-md-4"><div class="metric-card"><h6>Best Model</h6><p class="mb-0">' + data.best_model + '</p></div></div>';
+                html += '<div class="col-md-4"><div class="metric-card"><h6>R² Score</h6><p class="mb-0">' + (data.best_r2 * 100).toFixed(2) + '%</p></div></div>';
+                html += '<div class="col-md-4"><div class="metric-card"><h6>Status</h6><p class="mb-0 text-success">Trained</p></div></div>';
+                html += '</div>';
+            }
+            
+            resultsContent.innerHTML = html;
+            resultsSection.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
